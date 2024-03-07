@@ -99,7 +99,7 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
 
       let repliedMsg = await msg.reply(`\`\`\`ansi\n${commandLineInfo} ${systemCommand}\n\`\`\``);
       let editRepliedMessage = (exitMessage = "") => {
-        let newContent = `\`\`\`ansi\n${commandLineInfo} ${systemCommand}\n`
+        let newContent = `\`\`\`ansi\n${commandLineInfo} ${systemCommand} ${systemCommandArguments.join(" ")}\n`
           + history.join("\n") + "\n"
           + `${exitMessage}\n\`\`\``;
 
@@ -132,7 +132,7 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
         editRepliedMessage(`Process exited with code ${code}`);
       });
       
-      console.log(`@${msg.author.tag} runs ${systemCommand} ${systemCommandArguments.join("")}`);
+      console.log(`@${msg.author.tag} runs ${systemCommand} ${systemCommandArguments.join(" ")}`);
       break;
   }
 });
