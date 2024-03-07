@@ -79,7 +79,14 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       console.log(`@${msg.author.tag} deletes user "${name}"`);
       break;
     case "run":
-      const commandLineInfo = `${OS.userInfo().username}@${OS.hostname()}:${process.cwd()}$`;
+      let cli = {
+        username: OS.userInfo().username,
+        hostname: OS.hostname(),
+        path: process.cwd()
+      }
+      if (cli.path.startsWith(`/home/${OS.userInfo().username}`))
+        cli.path = cli.path.slice(`/home/${OS.userInfo().username}`.length);
+      const commandLineInfo = `${cli.username}@${cli.hostname}:${cli.path}$`;
 
       const systemCommand = args.slice(1).join(" ");
       if (!systemCommand) {
@@ -94,7 +101,7 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       let editRepliedMessage = (exitMessage = "") => {
         let newContent = `\`\`\`ansi\n${commandLineInfo} ${systemCommand}\n`
           + history.join("\n") + "\n"
-          + `${exitMessage}\n${exitMessage ? `${commandLineInfo}\n` : ""}\`\`\``;
+          + `${exitMessage}\n\`\`\``;
 
         if (newContent.length > 4000)
           repliedMsg.edit("Can't edit message because `length > 4000`.");
