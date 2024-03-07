@@ -88,7 +88,7 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
         cli.path = "~" + cli.path.slice(`/home/${OS.userInfo().username}`.length);
       const commandLineInfo = `${cli.username}@${cli.hostname}:${cli.path}$`;
 
-      const systemCommand = args.slice(1).join(" ");
+      const systemCommand = args[1];
       if (!systemCommand) {
         msg.reply("Invalid Argument.");
         return
@@ -132,7 +132,7 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
         editRepliedMessage(`Process exited with code ${code}`);
       });
       
-      console.log(`@${msg.author.tag} runs ${systemCommand}`);
+      console.log(`@${msg.author.tag} runs ${systemCommand} ${systemCommandArguments.join("")}`);
       break;
   }
 });
