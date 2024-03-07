@@ -35,7 +35,7 @@ const client = new Dc.Client({
 });
 
 client.on(Dc.Events.ClientReady, async () => {
-  console.log(`Client @${client.user.username} is ready`)
+  console.log(`Client @${client.user.tag} is ready`)
 });
 
 client.on(Dc.Events.MessageCreate, async (msg) => {
