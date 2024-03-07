@@ -12,5 +12,5 @@ if (cluster.isPrimary) {
 }
 
 if (cluster.isWorker) {
-  require("./dist/index.js");
+  require("./index.js");
 }
