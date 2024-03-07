@@ -89,7 +89,7 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
           repliedMsg.edit(newContent);
       };
 
-      const child = ChildProcess.spawn(systemCommand, systemCommandArguments);
+      const child = ChildProcess.spawn(systemCommand, systemCommandArguments, { shell: true });
 
       let history: Array<string> = [];
 
