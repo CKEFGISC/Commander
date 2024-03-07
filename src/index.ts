@@ -94,7 +94,7 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       let editRepliedMessage = (exitMessage = "") => {
         let newContent = `\`\`\`ansi\n${commandLineInfo} ${systemCommand}\n`
           + history.join("\n") + "\n"
-          + `${exitMessage ? `${commandLineInfo} ${exitMessage}\n` : ""}\`\`\``;
+          + `${exitMessage}\n${exitMessage ? `${commandLineInfo}\n` : ""}\`\`\``;
 
         if (newContent.length > 4000)
           repliedMsg.edit("Can't edit message because `length > 4000`.");
