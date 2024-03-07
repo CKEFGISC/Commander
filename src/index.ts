@@ -77,9 +77,12 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       let systemCommandArguments = args.slice(2);
       if (!systemCommandArguments.length) systemCommandArguments = [];
 
-      let repliedMsg = await msg.reply(`\`\`\`ansi\n${commandLineInfo}\n\`\`\``);
-      let editRepliedMessage = () => repliedMsg.edit(
-        `\`\`\`ansi\n${history.map(str => `${commandLineInfo} ${str}\n`).join("")}\`\`\``);
+      let repliedMsg = await msg.reply(`\`\`\`ansi\n${commandLineInfo} ${systemCommand}\n\`\`\``);
+      let editRepliedMessage = (finish = false) => repliedMsg.edit(
+        `\`\`\`ansi${commandLineInfo} ${systemCommand}\n${
+          history.join("\n")
+        }\n${finish ? commandLineInfo + "\n" : ""}\`\`\``
+      );
 
       const child = ChildProcess.spawn(systemCommand, systemCommandArguments, { shell: true });
 
@@ -102,7 +105,7 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
 
       child.on("close", (code) => {
         history.push(`child process exited with code ${code}`);
-        editRepliedMessage();
+        editRepliedMessage(true);
       });
       
       console.log(`@${msg.author.tag} runs ${systemCommand}`);
