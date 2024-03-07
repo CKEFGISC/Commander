@@ -50,11 +50,12 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
     return;
   } 
 
+  let ping, userId, name;
   switch (args[0]) {
     case "create-user":
-      const ping = args[1];
-      let userId = ping.match(/^<@(\d+)>$/)?.[1];
-      const name = args[2];
+      ping = args[1];
+      userId = ping.match(/^<@(\d+)>$/)?.[1];
+      name = args[2];
 
       if (!userId || !name) {
         msg.reply("Invalid Argument.");
@@ -64,6 +65,18 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       Database.appendToArray("users", { userId, name });
       msg.reply(`Created user \`${name}\` for ${ping}.`);
       console.log(`@${msg.author.tag} creates user "${name}"`);
+      break;
+    case "delete-user":
+      name = args[1];
+
+      if (!name) {
+        msg.reply("Invalid Argument.");
+        return;
+      }
+
+      Database.removeFromArrayIf("users", (userData) => userData.name === name);
+      msg.reply(`Deleted user \`${name}\`.`);
+      console.log(`@${msg.author.tag} deletes user "${name}"`);
       break;
     case "run":
       const commandLineInfo = `${OS.userInfo().username}@${OS.hostname()}:${process.cwd()}$`;

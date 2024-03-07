@@ -32,4 +32,17 @@ export default class Database {
     
     this.fs.write(ObjectUtil.set(data, keys, arr));
   }
+
+  static async removeFromArrayIf(path: string, predicate: (value: any, index?: number, array?: Array<any>) => boolean) {
+    const keys = path.split(".");
+
+    let data = await this.fs.read();
+
+    let arr = ObjectUtil.query(data, keys);
+    if (!(arr instanceof Array)) 
+      throw new TypeError("Try to delete from to non-array.");
+    arr = arr.filter((...params) => !predicate(...params));
+    
+    this.fs.write(ObjectUtil.set(data, keys, arr));
+  }
 }
