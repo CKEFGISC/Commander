@@ -103,8 +103,8 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
           + history.join("\n") + "\n"
           + `${exitMessage}\n\`\`\``;
 
-        if (newContent.length > 4000)
-          repliedMsg.edit("Can't edit message because `length > 4000`.");
+        if (newContent.length > 2000)
+          repliedMsg.edit("Can't edit message because `length > 2000`.");
         else
           repliedMsg.edit(newContent);
       };
