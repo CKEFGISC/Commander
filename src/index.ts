@@ -78,11 +78,16 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       if (!systemCommandArguments.length) systemCommandArguments = [];
 
       let repliedMsg = await msg.reply(`\`\`\`ansi\n${commandLineInfo} ${systemCommand}\n\`\`\``);
-      let editRepliedMessage = (finish = false) => repliedMsg.edit(
-        `\`\`\`ansi${commandLineInfo} ${systemCommand}\n${
-          history.join("\n")
-        }\n${finish ? commandLineInfo + "\n" : ""}\`\`\``
-      );
+      let editRepliedMessage = (exitMessage = "") => {
+        let newContent = `\`\`\`ansi\n${commandLineInfo} ${systemCommand}\n`
+          + history.join("\n") + "\n"
+          + `${exitMessage ? `${commandLineInfo} ${exitMessage}\n` : ""}\`\`\``;
+
+        if (newContent.length > 4000)
+          repliedMsg.edit("Can't edit message because `length > 4000`.");
+        else
+          repliedMsg.edit(newContent);
+      };
 
       const child = ChildProcess.spawn(systemCommand, systemCommandArguments, { shell: true });
 
@@ -104,8 +109,7 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       });
 
       child.on("close", (code) => {
-        history.push(`child process exited with code ${code}`);
-        editRepliedMessage(true);
+        editRepliedMessage(`Process exited with code ${code}`);
       });
       
       console.log(`@${msg.author.tag} runs ${systemCommand}`);
