@@ -97,11 +97,15 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       let systemCommandArguments = args.slice(2);
       if (!systemCommandArguments.length) systemCommandArguments = [];
 
-      let repliedMsg = await msg.reply(`\`\`\`ansi\n${commandLineInfo} ${systemCommand}\n\`\`\``);
+      let repliedMsg = await msg.reply(
+        "```ansi\n" + [ commandLineInfo, systemCommand, systemCommandArguments.join(" ") ].join(" ") + "\n```"
+      );
+      
       let editRepliedMessage = (exitMessage = "") => {
-        let newContent = `\`\`\`ansi\n${commandLineInfo} ${systemCommand} ${systemCommandArguments.join(" ")}\n`
-          + history.join("\n") + "\n"
-          + `${exitMessage}\n\`\`\``;
+        let newContent = "```ansi\n";
+        newContent += [ commandLineInfo, systemCommand, systemCommandArguments.join(" ") ].join(" ") + "\n";
+        newContent += history.join("\n") + "\n";
+        newContent += exitMessage + "\n```";
 
         if (newContent.length > 2000)
           repliedMsg.edit("Can't edit message because `length > 2000`.");
