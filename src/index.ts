@@ -85,7 +85,7 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
         path: process.cwd()
       }
       if (cli.path.startsWith(`/home/${OS.userInfo().username}`))
-        cli.path = cli.path.slice(`/home/${OS.userInfo().username}`.length);
+        cli.path = "~" + cli.path.slice(`/home/${OS.userInfo().username}`.length);
       const commandLineInfo = `${cli.username}@${cli.hostname}:${cli.path}$`;
 
       const systemCommand = args.slice(1).join(" ");
