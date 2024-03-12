@@ -49,7 +49,7 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
   const commandLineInfo = `${cli.username}@${cli.hostname}:${cli.path}$`;
 
   if (!systemCommand) {
-    msg.reply("Invalid Argument.");
+    msg.reply("Invalid arguments.");
     return;
   }
 
@@ -95,6 +95,17 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
   console.log(`@${msg.author.tag} runs ${systemCommand} ${systemCommandArguments.join(" ")}`);
 }
 
+type UserInfo = {
+  userId: Dc.Snowflake;
+  name: string;
+};
+
+type CustomCommand = {
+  name: string;
+  command: string;
+  args: Array<string>;
+};
+
 client.on(Dc.Events.MessageCreate, async (msg) => {
   // if (msg.partial) await msg.fetch(false).then((newMsg) => msg = newMsg, null);
 
@@ -107,15 +118,15 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
     return;
   } 
 
-  let ping: string, userId: Dc.UserMention, name: string;
+  let ping: Dc.UserMention, userId: Dc.Snowflake, name: string;
   switch (args[0]) {
     case "create-user":
-      ping = args[1];
-      userId = ping.match(/^<@(\d+)>$/)?.[1] as Dc.UserMention;
+      ping = args[1] as Dc.UserMention;
+      userId = ping.match(/^<@(\d+)>$/)?.[1] as Dc.Snowflake;
       name = args[2];
 
       if (!userId || !name) {
-        msg.reply("Invalid Argument.");
+        msg.reply("Invalid arguments.");
         return;
       }
 
@@ -123,30 +134,40 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       msg.reply(`Created user \`${name}\` for ${ping}.`);
       console.log(`@${msg.author.tag} creates user "${name}"`);
       break;
+
     case "delete-user":
       name = args[1];
 
       if (!name) {
-        msg.reply("Invalid Argument.");
+        msg.reply("Invalid arguments.");
         return;
       }
 
-      Database.removeFromArrayIf("users", (userData) => userData.name === name);
+      Database.removeFromArrayIf<UserInfo>("users", (userData) => userData.name === name);
       msg.reply(`Deleted user \`${name}\`.`);
       console.log(`@${msg.author.tag} deletes user "${name}"`);
       break;
+
     case "run":
       await run(msg, args[1], args.slice(2));
       break;
+
     case "define":
-      let newCustomCommand = {
+      let newCustomCommand: CustomCommand = {
         name: args[1],
         command: args[2],
-        args: args.slice(1)
+        args: args.slice(3)
       };
 
       if (!newCustomCommand.name || !newCustomCommand.command) {
-        msg.reply("Invalid Argument.");
+        msg.reply("Invalid arguments.");
+        return;
+      }
+
+      if ([ "create-user", "delete-user", "run", "define", "undefine" ].includes(newCustomCommand.name) ||
+        (await Database.get("customCommands") as Array<CustomCommand>)
+          .findIndex(cc => cc.name === newCustomCommand.name) !== -1) {
+        await msg.reply("Command already exist!");
         return;
       }
 
@@ -154,12 +175,22 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       msg.reply(`Created command \`${newCustomCommand.name}\``);
       console.log(`@${msg.author.tag} creates command "${newCustomCommand.name}"`);
       break;
+
+    case "undefine":
+      let commandName = args[1];
+
+      if (!commandName) {
+        msg.reply("Invalid arguments.");
+        return;
+      }
+
+      Database.removeFromArrayIf<CustomCommand>("customCommands", (cc) => cc.name === commandName);
+      msg.reply(`Removed command \`${commandName}\``);
+      console.log(`@${msg.author.tag} deletes command "${commandName}"`);
+      break;
+
     default:
-      let customCommands = await Database.get("customCommands") as Array<{
-        name: string;
-        command: string;
-        args: Array<string>;
-      }>;
+      let customCommands = await Database.get("customCommands") as Array<CustomCommand>;
       
       let cmd = customCommands.find(cc => cc.name === args[0]);
       if (!cmd) return;

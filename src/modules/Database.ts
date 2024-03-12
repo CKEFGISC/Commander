@@ -33,7 +33,7 @@ export default class Database {
     this.fs.write(ObjectUtil.set(data, keys, arr));
   }
 
-  static async removeFromArrayIf(path: string, predicate: (value: any, index?: number, array?: Array<any>) => boolean) {
+  static async removeFromArrayIf<T>(path: string, predicate: (value: T, index?: number, array?: Array<T>) => boolean) {
     const keys = path.split(".");
 
     let data = await this.fs.read();

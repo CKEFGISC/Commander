@@ -15,11 +15,57 @@
     ],
     "customCommands": [
         {
-            "name": "test",
-            "command": "echo",
+            "name": "sshq",
+            "command": "ps",
             "args": [
-                "\"Hello,",
-                "world!\""
+                "aux",
+                "|",
+                "grep",
+                "ssh"
+            ]
+        },
+        {
+            "name": "tunnel32767",
+            "command": "ssh",
+            "args": [
+                "-f",
+                "-N",
+                "-R",
+                "32767:localhost:22",
+                "fgisc@203.64.52.132"
+            ]
+        },
+        {
+            "name": "tunnel34567",
+            "command": "ssh",
+            "args": [
+                "-f",
+                "-N",
+                "-R",
+                "34567:localhost:22",
+                "fgisc@203.64.52.132"
+            ]
+        },
+        {
+            "name": "tunnel8787",
+            "command": "ssh",
+            "args": [
+                "-f",
+                "-N",
+                "-R",
+                "8787:localhost:22",
+                "fgisc@203.64.52.132"
+            ]
+        },
+        {
+            "name": "tunnel48763",
+            "command": "ssh",
+            "args": [
+                "-f",
+                "-N",
+                "-R",
+                "48763:localhost:22",
+                "fgisc@203.64.52.132"
             ]
         }
     ]
