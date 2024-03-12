@@ -38,6 +38,63 @@ client.on(Dc.Events.ClientReady, async () => {
   console.log(`Client @${client.user.tag} is ready`)
 });
 
+async function run(msg: Dc.Message, systemCommand: string, systemCommandArguments: Array<string>) {
+  let cli = {
+    username: OS.userInfo().username,
+    hostname: OS.hostname(),
+    path: process.cwd()
+  }
+  if (cli.path.startsWith(`/home/${cli.username}`))
+    cli.path = "~" + cli.path.slice(`/home/${cli.username}`.length);
+  const commandLineInfo = `${cli.username}@${cli.hostname}:${cli.path}$`;
+
+  if (!systemCommand) {
+    msg.reply("Invalid Argument.");
+    return;
+  }
+
+  let repliedMsg = await msg.reply(
+    "```ansi\n" + [ commandLineInfo, systemCommand, systemCommandArguments.join(" ") ].join(" ") + "\n```"
+  );
+  
+  let editRepliedMessage = (exitMessage = "") => {
+    let newContent = "```ansi\n";
+    newContent += [ commandLineInfo, systemCommand, systemCommandArguments.join(" ") ].join(" ") + "\n";
+    newContent += history.join("\n") + "\n";
+    newContent += exitMessage + "\n```";
+
+    if (newContent.length > 2000)
+      repliedMsg.edit("Can't edit message because `length > 2000`.");
+    else
+      repliedMsg.edit(newContent);
+  };
+
+  const child = ChildProcess.spawn(systemCommand, systemCommandArguments, { shell: true });
+
+  let history: Array<string> = [];
+
+  child.stdout.on("data", (data) => {
+    history.push(data);
+    editRepliedMessage();
+  });
+
+  child.stderr.on("data", (data) => {
+    history.push(data);
+    editRepliedMessage();
+  });
+
+  child.on("error", (err) => {
+    history.push(`Error: ${err.message}`);
+    editRepliedMessage();
+  });
+
+  child.on("close", (code) => {
+    editRepliedMessage(`Process exited with code ${code}`);
+  });
+  
+  console.log(`@${msg.author.tag} runs ${systemCommand} ${systemCommandArguments.join(" ")}`);
+}
+
 client.on(Dc.Events.MessageCreate, async (msg) => {
   // if (msg.partial) await msg.fetch(false).then((newMsg) => msg = newMsg, null);
 
@@ -50,11 +107,11 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
     return;
   } 
 
-  let ping, userId, name;
+  let ping: string, userId: Dc.UserMention, name: string;
   switch (args[0]) {
     case "create-user":
       ping = args[1];
-      userId = ping.match(/^<@(\d+)>$/)?.[1];
+      userId = ping.match(/^<@(\d+)>$/)?.[1] as Dc.UserMention;
       name = args[2];
 
       if (!userId || !name) {
@@ -79,64 +136,35 @@ client.on(Dc.Events.MessageCreate, async (msg) => {
       console.log(`@${msg.author.tag} deletes user "${name}"`);
       break;
     case "run":
-      let cli = {
-        username: OS.userInfo().username,
-        hostname: OS.hostname(),
-        path: process.cwd()
-      }
-      if (cli.path.startsWith(`/home/${OS.userInfo().username}`))
-        cli.path = "~" + cli.path.slice(`/home/${OS.userInfo().username}`.length);
-      const commandLineInfo = `${cli.username}@${cli.hostname}:${cli.path}$`;
-
-      const systemCommand = args[1];
-      if (!systemCommand) {
-        msg.reply("Invalid Argument.");
-        return
-      }
-
-      let systemCommandArguments = args.slice(2);
-      if (!systemCommandArguments.length) systemCommandArguments = [];
-
-      let repliedMsg = await msg.reply(
-        "```ansi\n" + [ commandLineInfo, systemCommand, systemCommandArguments.join(" ") ].join(" ") + "\n```"
-      );
-      
-      let editRepliedMessage = (exitMessage = "") => {
-        let newContent = "```ansi\n";
-        newContent += [ commandLineInfo, systemCommand, systemCommandArguments.join(" ") ].join(" ") + "\n";
-        newContent += history.join("\n") + "\n";
-        newContent += exitMessage + "\n```";
-
-        if (newContent.length > 2000)
-          repliedMsg.edit("Can't edit message because `length > 2000`.");
-        else
-          repliedMsg.edit(newContent);
+      await run(msg, args[1], args.slice(2));
+      break;
+    case "define":
+      let newCustomCommand = {
+        name: args[1],
+        command: args[2],
+        args: args.slice(1)
       };
 
-      const child = ChildProcess.spawn(systemCommand, systemCommandArguments, { shell: true });
+      if (!newCustomCommand.name || !newCustomCommand.command) {
+        msg.reply("Invalid Argument.");
+        return;
+      }
 
-      let history: Array<string> = [];
-
-      child.stdout.on("data", (data) => {
-        history.push(data);
-        editRepliedMessage();
-      });
-
-      child.stderr.on("data", (data) => {
-        history.push(data);
-        editRepliedMessage();
-      });
-
-      child.on("error", (err) => {
-        history.push(`Error: ${err.message}`);
-        editRepliedMessage();
-      });
-
-      child.on("close", (code) => {
-        editRepliedMessage(`Process exited with code ${code}`);
-      });
+      Database.appendToArray("customCommands", newCustomCommand);
+      msg.reply(`Created command \`${newCustomCommand.name}\``);
+      console.log(`@${msg.author.tag} creates command "${newCustomCommand.name}"`);
+      break;
+    default:
+      let customCommands = await Database.get("customCommands") as Array<{
+        name: string;
+        command: string;
+        args: Array<string>;
+      }>;
       
-      console.log(`@${msg.author.tag} runs ${systemCommand} ${systemCommandArguments.join(" ")}`);
+      let cmd = customCommands.find(cc => cc.name === args[0]);
+      if (!cmd) return;
+
+      run(msg, cmd.command, cmd.args);
       break;
   }
 });

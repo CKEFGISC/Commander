@@ -12,5 +12,15 @@
             "userId": "872315702860718080",
             "name": "807"
         }
+    ],
+    "customCommands": [
+        {
+            "name": "test",
+            "command": "echo",
+            "args": [
+                "\"Hello,",
+                "world!\""
+            ]
+        }
     ]
 }
