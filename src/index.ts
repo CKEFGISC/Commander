@@ -67,7 +67,7 @@ class AsyncQueue {
 
 function stripAnsiCodes(input: string): string {
   // Regular expression to match ANSI color codes
-  const ansiColorRegex = /\x1b\??\[[0-9;]*[A-Za-z]/g;
+  const ansiColorRegex = /\x1b\[\??[0-9;]*[A-Za-z]/g;
   
   // Replace ANSI color codes with an empty string
   return input.replace(ansiColorRegex, "");
