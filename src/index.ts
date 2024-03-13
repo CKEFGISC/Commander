@@ -65,6 +65,14 @@ class AsyncQueue {
   }
 }
 
+function stripAnsiColors(input: string): string {
+  // Regular expression to match ANSI color codes
+  const ansiColorRegex = /\x1b\[[0-9;]*m/g;
+  
+  // Replace ANSI color codes with an empty string
+  return input.replace(ansiColorRegex, '');
+}
+
 async function run(msg: Dc.Message, systemCommand: string, systemCommandArguments: Array<string>) {
   if (!systemCommand) {
     msg.reply("Invalid arguments.");
@@ -91,6 +99,8 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
   
   let pushLinesToDiscord = (newLine: string) => {
     tasksQueue.add(async () => {
+      newLine = stripAnsiColors(newLine);
+      
       if (newLine.length > 1992) {
         await repliedMsg.edit("```sh\nError: Content length > 2000 in 1 line\n```");
         return;
