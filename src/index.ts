@@ -70,7 +70,7 @@ function stripAnsiColors(input: string): string {
   const ansiColorRegex = /\x1b\[[0-9;]*m/g;
   
   // Replace ANSI color codes with an empty string
-  return input.replace(ansiColorRegex, '');
+  return input.replace(ansiColorRegex, "");
 }
 
 async function run(msg: Dc.Message, systemCommand: string, systemCommandArguments: Array<string>) {
@@ -99,8 +99,8 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
   
   let pushLinesToDiscord = (newLine: string) => {
     tasksQueue.add(async () => {
-      newLine = stripAnsiColors(newLine);
-      
+      newLine = stripAnsiColors(newLine.toString());
+
       if (newLine.length > 1992) {
         await repliedMsg.edit("```sh\nError: Content length > 2000 in 1 line\n```");
         return;
