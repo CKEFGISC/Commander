@@ -39,6 +39,11 @@ client.on(Dc.Events.ClientReady, async () => {
 });
 
 async function run(msg: Dc.Message, systemCommand: string, systemCommandArguments: Array<string>) {
+  if (!systemCommand) {
+    msg.reply("Invalid arguments.");
+    return;
+  }
+  
   let cli = {
     username: OS.userInfo().username,
     hostname: OS.hostname(),
@@ -47,49 +52,43 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
   if (cli.path.startsWith(`/home/${cli.username}`))
     cli.path = "~" + cli.path.slice(`/home/${cli.username}`.length);
   const commandLineInfo = `${cli.username}@${cli.hostname}:${cli.path}$`;
-
-  if (!systemCommand) {
-    msg.reply("Invalid arguments.");
-    return;
-  }
+  
+  let outputLines = new Array<string>();
+  outputLines.push([ commandLineInfo, systemCommand, ...systemCommandArguments ].join(" "));
 
   let repliedMsg = await msg.reply(
-    "```ansi\n" + [ commandLineInfo, systemCommand, systemCommandArguments.join(" ") ].join(" ") + "\n```"
+    "```\n" + outputLines.join("\n") + "\n```"
   );
   
-  let editRepliedMessage = (exitMessage = "") => {
-    let newContent = "```ansi\n";
-    newContent += [ commandLineInfo, systemCommand, systemCommandArguments.join(" ") ].join(" ") + "\n";
-    newContent += history.join("\n") + "\n";
-    newContent += exitMessage + "\n```";
+  let editRepliedMessage = (newLine: string) => {
+    outputLines.push(newLine);
 
-    if (newContent.length > 2000)
-      repliedMsg.edit("Can't edit message because `length > 2000`.");
-    else
-      repliedMsg.edit(newContent);
+    let content = outputLines.join("\n");
+    if (content.length > 1992) {
+      outputLines = [ newLine ];
+      msg.channel.send("```sh\n" + newLine + "\n```");
+      return;
+    }
+
+    repliedMsg.edit("```sh\n" + content + "\n```");
   };
 
   const child = ChildProcess.spawn(systemCommand, systemCommandArguments, { shell: true });
 
-  let history: Array<string> = [];
-
   child.stdout.on("data", (data) => {
-    history.push(data);
-    editRepliedMessage();
+    editRepliedMessage(data);
   });
 
   child.stderr.on("data", (data) => {
-    history.push(data);
-    editRepliedMessage();
+    editRepliedMessage(data);
   });
 
   child.on("error", (err) => {
-    history.push(`Error: ${err.message}`);
-    editRepliedMessage();
+    editRepliedMessage(`Error: ${err.message}`);
   });
 
   child.on("close", (code) => {
-    editRepliedMessage(`Process exited with code ${code}`);
+    editRepliedMessage(`\nProcess exited with code ${code}`);
   });
   
   console.log(`@${msg.author.tag} runs ${systemCommand} ${systemCommandArguments.join(" ")}`);
