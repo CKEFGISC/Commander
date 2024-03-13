@@ -61,10 +61,14 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
   );
   
   let editRepliedMessage = async (newLine: string) => {
+    if (newLine.length > 1992) {
+      await repliedMsg.edit("```sh\nError: Message content length > 2000\n```");
+    }
+
     outputLines.push(newLine);
 
     let content = outputLines.join("\n");
-    
+
     if (content.length > 1992) {
       outputLines = [ newLine ];
       repliedMsg = await msg.channel.send("```sh\n" + newLine + "\n```");
