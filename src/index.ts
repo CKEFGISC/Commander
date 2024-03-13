@@ -71,6 +71,8 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
 
     if (newLine.length > 1992) {
       await repliedMsg.edit("```sh\nError: Content length > 2000 in 1 line\n```");
+      pushingBuffer = false;
+      return;
     }
 
     outputLines.push(newLine);
@@ -84,7 +86,7 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
     else {
       await repliedMsg.edit("```sh\n" + content + "\n```");
     }
-    
+
     pushingBuffer = false;
   };
 
