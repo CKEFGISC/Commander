@@ -60,7 +60,13 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
     "```\n" + outputLines.join("\n") + "\n```"
   );
   
+  let sendingNewMessage = false;
   let editRepliedMessage = async (newLine: string) => {
+    await new Promise<void>((resolve) => {
+      while (sendingNewMessage) {}
+      resolve();
+    });
+
     if (newLine.length > 1992) {
       await repliedMsg.edit("```sh\nError: Content length > 2000 in 1 line\n```");
     }
@@ -71,7 +77,9 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
 
     if (content.length > 1992) {
       outputLines = [ newLine ];
+      sendingNewMessage = true;
       repliedMsg = await msg.channel.send("```sh\n" + newLine + "\n```");
+      sendingNewMessage = false;
       return;
     }
 
