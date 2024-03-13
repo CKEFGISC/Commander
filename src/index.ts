@@ -125,7 +125,7 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
   });
 
   child.on("close", (code) => {
-    pushLinesToDiscord(`\nProcess exited with code ${code}`);
+    pushLinesToDiscord(`Process exited with code ${code}`);
   });
   
   console.log(`@${msg.author.tag} runs ${systemCommand} ${systemCommandArguments.join(" ")}`);
