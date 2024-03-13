@@ -38,6 +38,33 @@ client.on(Dc.Events.ClientReady, async () => {
   console.log(`Client @${client.user.tag} is ready`)
 });
 
+type AsyncFunction = () => Promise<void>;
+
+class AsyncQueue {
+  private queue = new Array<AsyncFunction>();
+  private running = false;
+
+  // Method to add async functions to the queue
+  add(func: AsyncFunction) {
+    this.queue.push(func);
+    if (!this.running) {
+      this.execute();
+    }
+  }
+
+  // Execute the queue
+  private async execute() {
+    this.running = true;
+    while (this.queue.length > 0) {
+      const func = this.queue.shift();
+      if (func) {
+        await func();
+      }
+    }
+    this.running = false;
+  }
+}
+
 async function run(msg: Dc.Message, systemCommand: string, systemCommandArguments: Array<string>) {
   if (!systemCommand) {
     msg.reply("Invalid arguments.");
@@ -59,56 +86,46 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
   let repliedMsg = await msg.reply(
     "```\n" + outputLines.join("\n") + "\n```"
   );
+
+  let tasksQueue = new AsyncQueue();
   
-  let pushingBuffer = false;
-  let editRepliedMessage = async (newLine: string) => {
-    console.log("0");
-    
-    while (pushingBuffer) {}
+  let pushLinesToDiscord = (newLine: string) => {
+    tasksQueue.add(async () => {
+      if (newLine.length > 1992) {
+        await repliedMsg.edit("```sh\nError: Content length > 2000 in 1 line\n```");
+        return;
+      }
+  
+      outputLines.push(newLine);
+  
+      let content = outputLines.join("\n");
+  
+      if (content.length > 1992) {
+        outputLines = [ newLine ];
+        repliedMsg = await msg.channel.send("```sh\n" + newLine + "\n```");
+        return;
+      }
 
-    console.log("1");
-
-    pushingBuffer = true;
-
-    if (newLine.length > 1992) {
-      await repliedMsg.edit("```sh\nError: Content length > 2000 in 1 line\n```");
-      pushingBuffer = false;
-      return;
-    }
-
-    outputLines.push(newLine);
-
-    let content = outputLines.join("\n");
-
-    if (content.length > 1992) {
-      outputLines = [ newLine ];
-      repliedMsg = await msg.channel.send("```sh\n" + newLine + "\n```");
-    }
-    else {
       await repliedMsg.edit("```sh\n" + content + "\n```");
-    }
-
-    console.log("2");
-
-    pushingBuffer = false;
+    });
   };
 
   const child = ChildProcess.spawn(systemCommand, systemCommandArguments, { shell: true });
 
   child.stdout.on("data", (data) => {
-    editRepliedMessage(data);
+    pushLinesToDiscord(data);
   });
 
   child.stderr.on("data", (data) => {
-    editRepliedMessage(data);
+    pushLinesToDiscord(data);
   });
 
   child.on("error", (err) => {
-    editRepliedMessage(`Error: ${err.message}`);
+    pushLinesToDiscord(`Error: ${err.message}`);
   });
 
   child.on("close", (code) => {
-    editRepliedMessage(`\nProcess exited with code ${code}`);
+    pushLinesToDiscord(`\nProcess exited with code ${code}`);
   });
   
   console.log(`@${msg.author.tag} runs ${systemCommand} ${systemCommandArguments.join(" ")}`);
