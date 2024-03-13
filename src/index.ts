@@ -60,17 +60,18 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
     "```\n" + outputLines.join("\n") + "\n```"
   );
   
-  let editRepliedMessage = (newLine: string) => {
+  let editRepliedMessage = async (newLine: string) => {
     outputLines.push(newLine);
 
     let content = outputLines.join("\n");
+    
     if (content.length > 1992) {
       outputLines = [ newLine ];
-      msg.channel.send("```sh\n" + newLine + "\n```");
+      repliedMsg = await msg.channel.send("```sh\n" + newLine + "\n```");
       return;
     }
 
-    repliedMsg.edit("```sh\n" + content + "\n```");
+    await repliedMsg.edit("```sh\n" + content + "\n```");
   };
 
   const child = ChildProcess.spawn(systemCommand, systemCommandArguments, { shell: true });
