@@ -60,12 +60,14 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
     "```\n" + outputLines.join("\n") + "\n```"
   );
   
-  let sendingNewMessage = false;
+  let pushingBuffer = false;
   let editRepliedMessage = async (newLine: string) => {
     await new Promise<void>((resolve) => {
-      while (sendingNewMessage) {}
+      while (pushingBuffer) {}
       resolve();
     });
+
+    pushingBuffer = true;
 
     if (newLine.length > 1992) {
       await repliedMsg.edit("```sh\nError: Content length > 2000 in 1 line\n```");
@@ -77,13 +79,13 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
 
     if (content.length > 1992) {
       outputLines = [ newLine ];
-      sendingNewMessage = true;
       repliedMsg = await msg.channel.send("```sh\n" + newLine + "\n```");
-      sendingNewMessage = false;
-      return;
     }
-
-    await repliedMsg.edit("```sh\n" + content + "\n```");
+    else {
+      await repliedMsg.edit("```sh\n" + content + "\n```");
+    }
+    
+    pushingBuffer = false;
   };
 
   const child = ChildProcess.spawn(systemCommand, systemCommandArguments, { shell: true });
