@@ -62,9 +62,11 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
   
   let pushingBuffer = false;
   let editRepliedMessage = async (newLine: string) => {
+    console.log("0");
+    
     while (pushingBuffer) {}
 
-    console.log("0");
+    console.log("1");
 
     pushingBuffer = true;
 
@@ -86,7 +88,7 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
       await repliedMsg.edit("```sh\n" + content + "\n```");
     }
 
-    console.log("1");
+    console.log("2");
 
     pushingBuffer = false;
   };
