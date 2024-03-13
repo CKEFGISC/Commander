@@ -62,7 +62,7 @@ async function run(msg: Dc.Message, systemCommand: string, systemCommandArgument
   
   let editRepliedMessage = async (newLine: string) => {
     if (newLine.length > 1992) {
-      await repliedMsg.edit("```sh\nError: Message content length > 2000\n```");
+      await repliedMsg.edit("```sh\nError: Content length > 2000 in 1 line\n```");
     }
 
     outputLines.push(newLine);
